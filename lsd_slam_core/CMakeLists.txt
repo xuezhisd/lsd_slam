@@ -2,13 +2,20 @@ cmake_minimum_required(VERSION 2.8.7)
 project(lsd_slam_core)
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+find_package(Boost REQUIRED COMPONENTS filesystem system)
+include_directories(${Boost_INCLUDE_DIRS})
+
 # Set the build type.  Options are:
 #  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
 #  Debug          : w/ debug symbols, w/o optimization
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE Release)
+#set(ROS_BUILD_TYPE Release)
+set(ROS_BUILD_TYPE Debug)
 
 rosbuild_init() 
 
@@ -19,6 +26,9 @@ set(CMAKE_MODULE_PATH   ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 find_package(Eigen3 REQUIRED)
 find_package(SuiteParse REQUIRED) # Apparently needed by g2o
 find_package(X11 REQUIRED)
+
+#find_package(Boost REQUIRED COMPONENTS filesystem system)
+#include_directories(${Boost_INCLUDE_DIRS})
 
 # FabMap
 # uncomment this part to enable fabmap
@@ -77,22 +87,31 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src
   ${PROJECT_SOURCE_DIR}/thirdparty/Sophus
   ${CSPARSE_INCLUDE_DIR} #Has been set by SuiteParse
-  ${CHOLMOD_INCLUDE_DIR} #Has been set by SuiteParse
+  ${CHOLMOD_INCLUDE_DIR} #Has been set by SuiteParse}
 )
 
 
 # build shared library.
 rosbuild_add_library(lsdslam SHARED ${SOURCE_FILES})
-target_link_libraries(lsdslam ${FABMAP_LIB} g2o_core g2o_stuff csparse cxsparse g2o_solver_csparse g2o_csparse_extension g2o_types_sim3 g2o_types_sba X11)
+#target_link_libraries(lsdslam ${FABMAP_LIB} g2o_core g2o_stuff csparse cxsparse g2o_solver_csparse g2o_csparse_extension g2o_types_sim3 g2o_types_sba X11)
+#target_link_libraries(lsdslam boost_system boost_filesystem ${FABMAP_LIB} g2o_core g2o_stuff csparse cxsparse g2o_solver_csparse g2o_csparse_extension g2o_types_sim3 g2o_types_sba X11)
+#target_link_libraries(lsdslam ${FABMAP_LIB} g2o_core g2o_stuff csparse cxsparse g2o_solver_csparse g2o_csparse_extension g2o_types_sim3 g2o_types_sba X11 boost_system)
+target_link_libraries(lsdslam ${FABMAP_LIB} g2o_core g2o_stuff csparse cxsparse g2o_solver_csparse g2o_csparse_extension g2o_types_sim3 g2o_types_sba X11 /usr/lib/x86_64-linux-gnu/libboost_system.so)
+#target_link_libraries(lsdslam boost_system boost_filesystem)
 rosbuild_link_boost(lsdslam thread)
 
 
 # build live ros node
 rosbuild_add_executable(live_slam src/main_live_odometry.cpp)
-target_link_libraries(live_slam lsdslam)
+#target_link_libraries(live_slam lsdslam boost_system boost_filesystem)
+#target_link_libraries(live_slam lsdslam boost_system boost_filesystem ${OpenCV_LIBS})
+target_link_libraries(live_slam lsdslam ${OpenCV_LIBS})
 
 
 # build image node
 rosbuild_add_executable(dataset_slam src/main_on_images.cpp)
-target_link_libraries(dataset_slam lsdslam)
+#target_link_libraries(dataset_slam lsdslam)
+#target_link_libraries(dataset_slam lsdslam boost_system boost_filesystem)
+#target_link_libraries(dataset_slam lsdslam boost_system boost_filesystem ${OpenCV_LIBS})
+target_link_libraries(dataset_slam lsdslam boost_system ${OpenCV_LIBS})
 

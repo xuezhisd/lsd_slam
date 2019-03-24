@@ -2,13 +2,25 @@ cmake_minimum_required(VERSION 2.4.6)
 project(lsd_slam_viewer)
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+#message(STATUS "OpenCV library status:")  
+#message(STATUS "    version: ${OpenCV_VERSION}")  
+#message(STATUS "    libraries: ${OpenCV_LIBS}")  
+#message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")  
+#if(CMAKE_VERSION VERSION_LESS "2.4.6")  
+#  # Add OpenCV headers location to your include paths  
+#  include_directories(${OpenCV_INCLUDE_DIRS})  
+#endif()
+
 # Set the build type.  Options are:
 #  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
 #  Debug          : w/ debug symbols, w/o optimization
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE Release)
+#set(ROS_BUILD_TYPE Release)
+set(ROS_BUILD_TYPE Debug)
 
 rosbuild_init()
 
@@ -24,6 +36,9 @@ set(QT_USE_QTXML TRUE)
 find_package(QGLViewer REQUIRED)
 find_package(Eigen3 REQUIRED)
 include_directories(${QT_INCLUDES} ${EIGEN3_INCLUDE_DIR} ${QGLVIEWER_INCLUDE_DIR})
+
+find_package(Boost REQUIRED COMPONENTS filesystem system)
+include_directories(${Boost_INCLUDE_DIRS})
 
 rosbuild_find_ros_package(dynamic_reconfigure)
 include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
@@ -62,12 +77,19 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/thirdparty/Sophus
 )  
 
+
 rosbuild_add_executable(viewer src/main_viewer.cpp ${SOURCE_FILES} ${HEADER_FILES})
 
-target_link_libraries(viewer ${QGLViewer_LIBRARIES} ${QT_LIBRARIES} ${QGLVIEWER_LIBRARY} GL glut GLU)
+#target_link_libraries(viewer ${QGLViewer_LIBRARIES} ${QT_LIBRARIES} ${QGLVIEWER_LIBRARY} GL glut GLU)
+#target_link_libraries(viewer ${QGLViewer_LIBRARIES} ${QT_LIBRARIES} ${QGLVIEWER_LIBRARY} boost_system boost_filesystem GL glut GLU)
+target_link_libraries(viewer ${QGLViewer_LIBRARIES} ${QT_LIBRARIES} ${QGLVIEWER_LIBRARY} /usr/lib/x86_64-linux-gnu/libboost_system.so /usr/lib/x86_64-linux-gnu/libboost_filesystem.so GL glut GLU)
+#target_link_libraries(viewer boost_system boost_filesystem)
 
+#rosbuild_link_boost(viewer /usr/lib/x86_64-linux-gnu/libboost_thread.so)
 rosbuild_link_boost(viewer thread)
 
 
 rosbuild_add_executable(videoStitch src/main_stitchVideos.cpp)
+#target_link_libraries(videoStitch boost_system boost_filesystem ${OpenCV_LIBS})
+target_link_libraries(videoStitch ${OpenCV_LIBS})
 
